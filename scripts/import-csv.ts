@@ -223,24 +223,27 @@ async function importParks(
     return;
   }
 
+  const BATCH_SIZE = 500;
   let inserted = 0;
-  const errors: { name: string; message: string }[] = [];
+  const errors: { range: string; message: string }[] = [];
 
-  for (const park of toInsert) {
-    const { error } = await supabase.from('parks').insert(park);
+  for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+    const batch = toInsert.slice(i, i + BATCH_SIZE);
+    const { error } = await supabase.from('parks').insert(batch);
     if (error) {
-      errors.push({ name: park.name, message: error.message });
+      errors.push({ range: `rows ${i + 1}-${i + batch.length}`, message: error.message });
     } else {
-      inserted++;
+      inserted += batch.length;
     }
+    console.log(`  ...${Math.min(i + BATCH_SIZE, toInsert.length)} / ${toInsert.length}`);
   }
 
   console.log(`\nDone.`);
   console.log(`  Inserted: ${inserted}`);
   console.log(`  Skipped (already existed): ${skipped}`);
   if (errors.length > 0) {
-    console.log(`  Failed: ${errors.length}`);
-    errors.forEach((e) => console.log(`    - ${e.name}: ${e.message}`));
+    console.log(`  Failed batches: ${errors.length}`);
+    errors.forEach((e) => console.log(`    - ${e.range}: ${e.message}`));
   }
 }
 

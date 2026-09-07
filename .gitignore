@@ -39,6 +39,9 @@ yarn-error.log*
 # supabase CLI local state
 supabase/.temp/
 
+# CSV import source data (already loaded into the database, not source code)
+/parks.csv
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
